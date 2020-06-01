@@ -9,21 +9,20 @@ int fd[2];
 int returnval;
 
 
-void parent_handler(){
-    signal(SIGUSR1, child_handler);
+void parent_handler(int signum){
     int x;
-    read(fd[1],&x,sizeof(int));
+    read(fd[0],&x,sizeof(int));
     printf("%d/n",x);
     if (x == end_num){
         //TODO
     }
     x++;
-    write(fd[0],&x,sizeof(int));
-    close(fd[0]);
+    write(fd[1],&x,sizeof(int));
+    close(fd[1]);
+    //signal(SIGUSR1, child_handler);
 }
 
-void child_handler(){
-    signal(SIGUSR1, parent_handler);
+void child_handler(int signum){
     int x;
     read(fd[0],&x,sizeof(int));
     printf("%d/n",x);
@@ -34,6 +33,7 @@ void child_handler(){
     write(fd[1],&x,sizeof(int));
     close(fd[1]);
     int parent_id = getppid();
+    signal(SIGUSR1, parent_handler);
     kill(parent_id, SIGUSR1);
 }
 
@@ -43,11 +43,10 @@ int main(){
         printf("An error occured while opening the pipe\n");
         return 1;
     }
-
+    signal(SIGUSR1, parent_handler);
     pid_t pid = fork();
     int parent_id = getppid();
     if(pid == 0){
-        signal(SIGUSR1, parent_handler);
         int x = 0;
         write(fd[1],&x,sizeof(int));
         close(fd[1]);
