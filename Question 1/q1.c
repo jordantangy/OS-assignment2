@@ -5,11 +5,18 @@
 #include "q1.h"
 
 #define end_num 5
+int flag = 1;
 int fd[2];
 int returnval;
 
+void stop(int signum){
+    flag = 0;
+}
+
 
 void parent_handler(int signum){
+    signal(SIGUSR1, child_handler);
+    signal(SIGUSR2, stop);
     int x;
     read(fd[0],&x,sizeof(int));
     printf("%d/n",x);
@@ -19,10 +26,15 @@ void parent_handler(int signum){
     x++;
     write(fd[1],&x,sizeof(int));
     close(fd[1]);
-    //signal(SIGUSR1, child_handler);
+    //kill(SIGUSR1, child);
+    while(flag){
+        sleep(1);
+    }
 }
 
 void child_handler(int signum){
+    signal(SIGUSR1, parent_handler);
+    signal(SIGUSR2, stop);
     int x;
     read(fd[0],&x,sizeof(int));
     printf("%d/n",x);
@@ -33,8 +45,10 @@ void child_handler(int signum){
     write(fd[1],&x,sizeof(int));
     close(fd[1]);
     int parent_id = getppid();
-    signal(SIGUSR1, parent_handler);
     kill(parent_id, SIGUSR1);
+    while(flag){
+        sleep(1);
+    }
 }
 
 int main(){
@@ -51,12 +65,12 @@ int main(){
         write(fd[1],&x,sizeof(int));
         close(fd[1]);
         kill(parent_id, SIGUSR1);
-        while(1){
+        while(flag){
             sleep(1);
         }
     }
     else{
-        while(1){
+        while(flag){
             sleep(1);
         }
     }
