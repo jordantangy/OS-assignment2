@@ -1,5 +1,7 @@
 #pragma once
 #include <sys/types.h>
 
-void parent_handler(int signum);
-void child_handler(int signum);
+void catch_sigusr1(int sig_num);
+void stop(int sig_num);
+void child_handler();
+void parent_handler(pid_t son_pid);

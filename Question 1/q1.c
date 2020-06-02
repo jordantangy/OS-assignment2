@@ -52,7 +52,6 @@ void parent_handler(pid_t son_pid) {
         int x;
         read(fd[0], &x, sizeof(int));
         printf("%d\n",x);
-
         if (x >= end_num){
             sleep(1);
             kill(son_pid, SIGUSR2);
