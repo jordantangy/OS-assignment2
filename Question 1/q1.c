@@ -1,78 +1,84 @@
-#include <unistd.h>
 #include <stdio.h>
-#include <signal.h>
 #include <stdlib.h>
-#include "q1.h"
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h> 
+#include <sys/wait.h>  
 
 #define end_num 5
-int flag = 1;
+int val = 0;
 int fd[2];
-int returnval;
 
-void stop(int signum){
-    flag = 0;
+int raiseNumber() {
+   int x = 0;
+   read(fd[0], &x, sizeof(x));
+   //printf("val is = %d\n", x);
+   printf("%d\n", x);
+   val = x + 1;
+   write(fd[1], &val, sizeof(val));
+   return val;
 }
 
-
-void parent_handler(int signum){
-    signal(SIGUSR1, child_handler);
-    signal(SIGUSR2, stop);
-    int x;
-    read(fd[0],&x,sizeof(int));
-    printf("%d/n",x);
-    if (x == end_num){
-        //TODO
-    }
-    x++;
-    write(fd[1],&x,sizeof(int));
-    close(fd[1]);
-    //kill(SIGUSR1, child);
-    while(flag){
-        sleep(1);
-    }
+void catch_sigusr1(int sig_num) {
+   signal(SIGUSR1, catch_sigusr1);
 }
 
-void child_handler(int signum){
-    signal(SIGUSR1, parent_handler);
-    signal(SIGUSR2, stop);
-    int x;
-    read(fd[0],&x,sizeof(int));
-    printf("%d/n",x);
-    if (x == end_num){
-        //TODO
-    }
-    x++;
-    write(fd[1],&x,sizeof(int));
-    close(fd[1]);
-    int parent_id = getppid();
-    kill(parent_id, SIGUSR1);
-    while(flag){
-        sleep(1);
-    }
+void child_handler() {
+   sleep(1);
+   if (val < end_num)
+      raiseNumber();
+   kill(getppid(), SIGUSR1);
+   pause();
 }
 
-int main(){
-    returnval = pipe(fd);
-    if(returnval == -1 ){
-        printf("An error occured while opening the pipe\n");
-        return 1;
-    }
-    signal(SIGUSR1, parent_handler);
-    pid_t pid = fork();
-    int parent_id = getppid();
-    if(pid == 0){
-        int x = 0;
-        write(fd[1],&x,sizeof(int));
-        close(fd[1]);
-        kill(parent_id, SIGUSR1);
-        while(flag){
-            sleep(1);
-        }
-    }
-    else{
-        while(flag){
-            sleep(1);
-        }
-    }
+void parent_handler(pid_t son_pid)
+{
+   //printf("hey\n");
+
+   pause();
+   if (val < end_num)
+      raiseNumber();
+   kill(son_pid, SIGUSR1);
 }
 
+int main() {
+   pipe(fd);
+   write(fd[1], &val, sizeof(val));
+   pid_t pid;
+   pid = fork();
+   signal(SIGUSR1, catch_sigusr1);
+   while (val < end_num) {
+      sleep(1);
+      switch (pid)
+      {
+      case -1:
+         printf("Fork error\n");
+         return -1;
+         break;
+      case 0:
+      printf("son\n");
+         child_handler();
+         break;
+
+      default:
+       printf("dad\n");
+         parent_handler(pid);
+         
+      }
+   }
+   if(pid == 0){
+      printf("Child is going to be terminated\n");
+      kill(pid, SIGKILL);
+      
+   }
+   else{
+      printf("Parent is going to be terminated\n");
+      kill(pid, SIGKILL);
+      
+   }
+   
+   close(fd[1]);
+   close(fd[0]);
+
+   return 0;
+}
