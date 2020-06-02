@@ -94,7 +94,7 @@ void* philospher(void* num)
 		sleep(0); 
 
 		put_fork(*i); 
-        f
+        
 	} 
 } 
 
