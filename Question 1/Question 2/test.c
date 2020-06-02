@@ -24,7 +24,6 @@ int raiseNumber()
 void catch_sigusr1(int sig_num)
 {
    signal(SIGUSR1, catch_sigusr1);
-   //printf("im a signal sigusr1", getpid());
 }
 
 void child_handler()
@@ -40,7 +39,6 @@ void child_handler()
 void parent_handler(pid_t son_pid)
 {
    //printf("hey\n");
-   //printf("pid of dad = %d, pid of son = %d\n", getpid(), son_pid);
 
    pause();
    if (val < end_num)
