@@ -19,8 +19,8 @@ sem_t S[N];
 void test(int phnum) 
 { 
 	if (state[phnum] == HUNGRY 
-		&& state[LEFT] != EATING 
-		&& state[RIGHT] != EATING) { 
+		&& state[LEFT] == THINKING 
+		&& state[RIGHT] == THINKING) { 
 		// state that eating 
 		state[phnum] = EATING; 
 
@@ -89,7 +89,7 @@ void* philospher(void* num)
 
 		sleep(1); 
 
-		take_fork(*i); 
+		take_fork(*i);
 
 		sleep(0); 
 
