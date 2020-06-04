@@ -24,7 +24,7 @@ void test(int phnum)
 		// state that eating 
 		state[phnum] = EATING; 
 
-		sleep(2); 
+		//sleep(2); 
 
 		printf("Philosopher %d takes fork %d and %d\n", 
 					phnum + 1, LEFT + 1, phnum + 1); 
@@ -91,7 +91,7 @@ void* philospher(void* num)
 
 		take_fork(*i); 
 
-		sleep(0);
+		sleep(0); 
 
 		put_fork(*i); 
 	} 
