@@ -16,11 +16,14 @@ int phil[N] = { 0, 1, 2, 3, 4 };
 sem_t mutex; 
 sem_t S[N]; 
 
+
+////////////// CHANGES IN TAKE_FORK FUNCTION \\\\\\\\\\\\\\\\\\
+
 void test(int phnum) 
 { 
 	if (state[phnum] == HUNGRY 
-		&& state[LEFT] == THINKING 
-		&& state[RIGHT] == THINKING) { 
+		&& state[LEFT] != EATING 
+		&& state[RIGHT] != EATING) { 
 		// state that eating 
 		state[phnum] = EATING; 
 
@@ -42,7 +45,11 @@ void test(int phnum)
 // take up chopsticks 
 void take_fork(int phnum) 
 { 
-
+    /*  
+     At the first run of the code, all the philosophers are put in a situation where the resource they are waiting
+     for his hold by the philospher next to them and we entered a situation of livelock.
+    */
+    sem_wait(&S[RIGHT]); 
 	sem_wait(&mutex); 
 
 	// state that hungry 
@@ -89,12 +96,11 @@ void* philospher(void* num)
 
 		sleep(1); 
 
-		take_fork(*i);
+		take_fork(*i); 
 
 		sleep(0); 
 
 		put_fork(*i); 
-        
 	} 
 } 
 
